@@ -9,7 +9,6 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
 
 import com.inria.pong.tcp.TCPClient;
 
@@ -18,6 +17,7 @@ import models.sensors.LinearAcceleration;
 public class MainActivity extends Activity implements SensorEventListener {
 
     private static final String TAG = "MainActivity";
+    private static int SERVER_PORT;
 
     private TCPClient mTcpClient;
 
@@ -30,11 +30,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        long playerID = getIntent().getLongExtra(StartActivity.PLAYER_ID, -1);
+        SERVER_PORT = 4443 + (int)playerID;
+
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         sManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-
-        Button send = (Button) findViewById(R.id.send_button);
 
         // connect to the server
         new connectTask().execute("");
@@ -59,19 +60,17 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+
         if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-            //if (counter < 500 && mTcpClient != null) {
-            LinearAcceleration linearAcceleration =
-                    new LinearAcceleration(sensorEvent.values[1], sensorEvent.timestamp);
+            if (counter > 1000 && mTcpClient != null) {
+                LinearAcceleration linearAcceleration =
+                        new LinearAcceleration(sensorEvent.values[1], sensorEvent.timestamp);
 
-            //Log.e(TAG, linearAcceleration.getValues() + "");
-
-            mTcpClient.sendMessage(linearAcceleration);
-            //counter++;
-            // }
+                mTcpClient.sendMessage(linearAcceleration);
+            }
         }
-        //counter++;
+        counter++;
 
     }
 
@@ -86,7 +85,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         protected TCPClient doInBackground(String... message) {
 
             //we create a TCPClient object and
-            mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
+            mTcpClient = new TCPClient(SERVER_PORT, new TCPClient.OnMessageReceived() {
                 @Override
                 //here the messageReceived method is implemented
                 public void messageReceived(String message) {

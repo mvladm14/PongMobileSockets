@@ -22,12 +22,13 @@ public class TCPClient {
     private DataInputStream in;
 
     public static final String SERVERIP = "131.254.101.102"; //your computer IP address
-    public static final int SERVERPORT = 4444;
+    private int serverPort;
 
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages received from server
      */
-    public TCPClient(OnMessageReceived listener) {
+    public TCPClient(int serverPort, OnMessageReceived listener) {
+        this.serverPort = serverPort;
         mMessageListener = listener;
     }
 
@@ -61,7 +62,7 @@ public class TCPClient {
             Log.e("TCP Client", "C: Connecting...");
 
             //create a socket to make the connection with the server
-            Socket socket = new Socket(serverAddr, SERVERPORT);
+            Socket socket = new Socket(serverAddr, serverPort);
 
             try {
 
