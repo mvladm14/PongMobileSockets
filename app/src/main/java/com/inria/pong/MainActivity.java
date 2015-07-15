@@ -17,7 +17,7 @@ import models.sensors.LinearAcceleration;
 public class MainActivity extends Activity implements SensorEventListener {
 
     private static final String TAG = "MainActivity";
-    private static int SERVER_PORT;
+    private static int PLAYER_PORT;
 
     private TCPClient mTcpClient;
 
@@ -31,7 +31,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         setContentView(R.layout.activity_main);
 
         long playerID = getIntent().getLongExtra(StartActivity.PLAYER_ID, -1);
-        SERVER_PORT = 4443 + (int)playerID;
+        PLAYER_PORT = 4443 + (int)playerID;
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -56,6 +56,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         //unregister the sensor listener
         sManager.unregisterListener(this);
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mTcpClient.stopClient();
+        super.onDestroy();
     }
 
     @Override
@@ -85,7 +91,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         protected TCPClient doInBackground(String... message) {
 
             //we create a TCPClient object and
-            mTcpClient = new TCPClient(SERVER_PORT, new TCPClient.OnMessageReceived() {
+            mTcpClient = new TCPClient(PLAYER_PORT, new TCPClient.OnMessageReceived() {
                 @Override
                 //here the messageReceived method is implemented
                 public void messageReceived(String message) {

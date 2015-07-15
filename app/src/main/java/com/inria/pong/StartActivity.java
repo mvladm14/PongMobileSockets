@@ -7,9 +7,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.inria.pong.tasks.AsyncResponse;
 import com.inria.pong.tasks.GetAvailablePlayersTask;
+import com.inria.pong.tcp.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,13 +26,12 @@ import retrofit.RestAdapter;
 public class StartActivity extends AppCompatActivity implements AsyncResponse {
 
     private static final String TAG = "StartActivity";
-    private static final String SERVER = "http://131.254.101.102:8080/myriads";
     private Spinner spinner;
     private Collection<Player> players;
 
     public static String PLAYER_ID = "PLAYER_ID";
 
-    private static PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(SERVER)
+    private static PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(Util.SERVER)
             .build().create(PlayerSvcApi.class);
 
     @Override
@@ -62,9 +63,8 @@ public class StartActivity extends AppCompatActivity implements AsyncResponse {
         List<String> strings = new ArrayList();
         this.players = players;
 
-        Iterator<Player> iterator = players.iterator();
-        while (iterator.hasNext()) {
-            strings.add("Player " + iterator.next().getId());
+        for (Player player : players) {
+            strings.add("Player " + player.getId());
         }
 
         ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, strings);
@@ -85,16 +85,22 @@ public class StartActivity extends AppCompatActivity implements AsyncResponse {
         }
 
         Log.e(TAG, p.getUsername() + " " + p.getId());
-        p.setCanPlay(false);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                playerSvcApi.addPlayer(p);
-            }
-        }).start();
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("PLAYER_ID", p.getId());
-        startActivity(intent);
+        //if (p.canPlay()) {
+            p.setCanPlay(false);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    playerSvcApi.addPlayer(p);
+                }
+            }).start();
+
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("PLAYER_ID", p.getId());
+            startActivity(intent);
+//        } else {
+//            initializeNonUIFields();
+//            Toast.makeText(this, "Please choose another player.", Toast.LENGTH_LONG).show();
+//        }
     }
 }

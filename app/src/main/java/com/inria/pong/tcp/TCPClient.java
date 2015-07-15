@@ -4,8 +4,6 @@ import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -21,7 +19,6 @@ public class TCPClient {
     private ObjectOutputStream out;
     private DataInputStream in;
 
-    public static final String SERVERIP = "131.254.101.102"; //your computer IP address
     private int serverPort;
 
     /**
@@ -57,7 +54,7 @@ public class TCPClient {
 
         try {
             //here you must put your computer's IP address.
-            InetAddress serverAddr = InetAddress.getByName(SERVERIP);
+            InetAddress serverAddr = InetAddress.getByName(Util.SERVER_IP);
 
             Log.e("TCP Client", "C: Connecting...");
 

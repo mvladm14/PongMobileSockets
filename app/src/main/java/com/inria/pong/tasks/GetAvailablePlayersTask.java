@@ -2,6 +2,8 @@ package com.inria.pong.tasks;
 
 import android.os.AsyncTask;
 
+import com.inria.pong.tcp.Util;
+
 import java.util.Collection;
 
 import models.player.Player;
@@ -13,9 +15,7 @@ import retrofit.RestAdapter;
  */
 public class GetAvailablePlayersTask extends AsyncTask<Void, Void, Collection<Player>> {
 
-    private static final String SERVER = "http://131.254.101.102:8080/myriads";
-
-    private static PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(SERVER)
+    private static PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(Util.SERVER)
             .build().create(PlayerSvcApi.class);
 
     private AsyncResponse delegate = null;
