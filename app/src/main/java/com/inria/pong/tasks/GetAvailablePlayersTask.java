@@ -15,7 +15,7 @@ import retrofit.RestAdapter;
  */
 public class GetAvailablePlayersTask extends AsyncTask<Void, Void, Collection<Player>> {
 
-    private static PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(Util.SERVER)
+    private static final PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(Util.SERVER)
             .build().create(PlayerSvcApi.class);
 
     private AsyncResponse delegate = null;

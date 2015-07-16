@@ -11,7 +11,7 @@ import android.widget.Toast;
 
 import com.inria.pong.tasks.AsyncResponse;
 import com.inria.pong.tasks.GetAvailablePlayersTask;
-import com.inria.pong.tcp.Util;
+import com.inria.pong.tasks.POST_Player_Task;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,8 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import models.player.Player;
-import restInterfaces.PlayerSvcApi;
-import retrofit.RestAdapter;
+import models.player.PlayerState;
 
 
 public class StartActivity extends AppCompatActivity implements AsyncResponse {
@@ -30,9 +29,6 @@ public class StartActivity extends AppCompatActivity implements AsyncResponse {
     private Collection<Player> players;
 
     public static String PLAYER_ID = "PLAYER_ID";
-
-    private static PlayerSvcApi playerSvcApi = new RestAdapter.Builder().setEndpoint(Util.SERVER)
-            .build().create(PlayerSvcApi.class);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +49,8 @@ public class StartActivity extends AppCompatActivity implements AsyncResponse {
     }
 
     private void initializeNonUIFields() {
-        GetAvailablePlayersTask getPongBallsTask = new GetAvailablePlayersTask(this);
-        getPongBallsTask.execute();
+        GetAvailablePlayersTask getAvailablePlayersTask = new GetAvailablePlayersTask(this);
+        getAvailablePlayersTask.execute();
     }
 
     @Override
@@ -75,32 +71,26 @@ public class StartActivity extends AppCompatActivity implements AsyncResponse {
     public void play(View view) {
 
         String player = spinner.getSelectedItem().toString();
-        final Player p;
+        final Player selectedPlayer;
         if (player.contains("1")) {
-            p = players.iterator().next();
+            selectedPlayer = players.iterator().next();
         } else {
             Iterator<Player> playerIterator = players.iterator();
             playerIterator.next();
-            p = playerIterator.next();
+            selectedPlayer = playerIterator.next();
         }
 
-        Log.e(TAG, p.getUsername() + " " + p.getId());
-
-        //if (p.canPlay()) {
-            p.setCanPlay(false);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    playerSvcApi.addPlayer(p);
-                }
-            }).start();
+        Log.e(TAG, selectedPlayer.toString());
+        if (selectedPlayer.getPlayerState() == PlayerState.AVAILABLE) {
+            selectedPlayer.setPlayerState(PlayerState.PLAYING);
+            new POST_Player_Task().execute(selectedPlayer);
 
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("PLAYER_ID", p.getId());
+            intent.putExtra("PLAYER_ID", selectedPlayer.getId());
             startActivity(intent);
-//        } else {
-//            initializeNonUIFields();
-//            Toast.makeText(this, "Please choose another player.", Toast.LENGTH_LONG).show();
-//        }
+        } else {
+            initializeNonUIFields();
+            Toast.makeText(this, "Please choose another player.", Toast.LENGTH_LONG).show();
+        }
     }
 }
