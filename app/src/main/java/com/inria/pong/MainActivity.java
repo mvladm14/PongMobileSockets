@@ -11,10 +11,14 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.inria.pong.tcp.TCPClient;
+import com.microsoft.band.BandIOException;
+import com.microsoft.band.sensors.BandAccelerometerEvent;
+import com.microsoft.band.sensors.BandAccelerometerEventListener;
+import com.microsoft.band.sensors.SampleRate;
 
 import models.sensors.LinearAcceleration;
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity implements SensorEventListener, BandAccelerometerEventListener {
 
     private static final String TAG = "MainActivity";
     private static int PLAYER_PORT;
@@ -31,7 +35,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         setContentView(R.layout.activity_main);
 
         long playerID = getIntent().getLongExtra(StartActivity.PLAYER_ID, -1);
-        PLAYER_PORT = 4443 + (int)playerID;
+        PLAYER_PORT = 4443 + (int) playerID;
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -46,7 +50,17 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
 
-        sManager.registerListener(this, sManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SensorManager.SENSOR_DELAY_FASTEST);
+        if (!StartActivity.USES_BAND) {
+            sManager.registerListener(this, sManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            try {
+                StartActivity.bandClient.getSensorManager().registerAccelerometerEventListener(
+                        this,
+                        SampleRate.MS32);
+            } catch (BandIOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     //When this Activity isn't visible anymore
@@ -83,6 +97,17 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    @Override
+    public void onBandAccelerometerChanged(BandAccelerometerEvent bandAccelerometerEvent) {
+        if (counter > 20 && mTcpClient != null) {
+            LinearAcceleration linearAcceleration =
+                    new LinearAcceleration(bandAccelerometerEvent.getAccelerationY(), bandAccelerometerEvent.getTimestamp());
+
+            mTcpClient.sendMessage(linearAcceleration);
+        }
+        counter++;
     }
 
     public class connectTask extends AsyncTask<String, String, TCPClient> {

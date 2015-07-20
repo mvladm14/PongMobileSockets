@@ -75,6 +75,15 @@
                 android:orientation="horizontal">
 
                 <Button
+                    android:id="@+id/useBandButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:onClick="useBand"
+                    android:text="Use Band" />
+
+                <Button
                     android:id="@+id/playButton"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

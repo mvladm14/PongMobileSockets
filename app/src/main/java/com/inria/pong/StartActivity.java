@@ -10,8 +10,15 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.inria.pong.tasks.AsyncResponse;
+import com.inria.pong.tasks.BandConnectionResponse;
+import com.inria.pong.tasks.BandConnectionTask;
 import com.inria.pong.tasks.GetAvailablePlayersTask;
 import com.inria.pong.tasks.POST_Player_Task;
+import com.microsoft.band.BandClient;
+import com.microsoft.band.BandClientManager;
+import com.microsoft.band.BandInfo;
+import com.microsoft.band.BandPendingResult;
+import com.microsoft.band.ConnectionState;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +29,10 @@ import models.player.Player;
 import models.player.PlayerState;
 
 
-public class StartActivity extends AppCompatActivity implements AsyncResponse {
+public class StartActivity extends AppCompatActivity implements AsyncResponse, BandConnectionResponse {
+
+    public static boolean USES_BAND = false;
+    public static BandClient bandClient;
 
     private static final String TAG = "StartActivity";
     private Spinner spinner;
@@ -92,5 +102,20 @@ public class StartActivity extends AppCompatActivity implements AsyncResponse {
             initializeNonUIFields();
             Toast.makeText(this, "Please choose another player.", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void useBand(View view) {
+        BandInfo[] pairedBands = BandClientManager.getInstance().getPairedBands();
+        bandClient = BandClientManager.getInstance().create(this, pairedBands[0]);
+
+        BandPendingResult<ConnectionState> pendingResult = bandClient.connect();
+        BandConnectionTask connectionTask = new BandConnectionTask(this);
+        connectionTask.execute(pendingResult);
+    }
+
+    @Override
+    public void onFinishedConnection(ConnectionState connectionState) {
+        USES_BAND = connectionState == ConnectionState.CONNECTED;
+        Toast.makeText(this, USES_BAND ? "Wearable is now connected" : "Can't connect to wearable.", Toast.LENGTH_LONG);
     }
 }
